@@ -1,0 +1,72 @@
+<script>
+  refresh();
+  async function refresh() {
+    get_status();
+    setTimeout(refresh, 2000);
+  }
+  async function get_status() {
+    try {
+      const status_response = await fetch("gate_status");
+      if (!status_response.ok) {
+        document.getElementById("sbs_button").disabled=true;
+        document.getElementById("status").innerText=`Обновить статус не удалось: ${status_response.status}`;
+      } else {
+        const obj = await status_response.json();
+        document.getElementById("sbs_button").disabled=false;
+        if ( obj.s == 0
+          && document.getElementById("status").innerText != "Закрывается..."
+        ) {
+          document.getElementById("status").innerText="Открыто";
+          document.getElementById("sbs_button").innerText="Закрыть";
+        } else if ( obj.s == 1 
+          && document.getElementById("status").innerText != "Открывается..."
+        ) {
+          document.getElementById("status").innerText="Закрыто";
+          document.getElementById("sbs_button").innerText="Открыть";
+        } else if ( obj.s == 2 ) {
+          if ( document.getElementById("status").innerText == "Остановлен при закрытии") {
+            document.getElementById("sbs_button").innerText="Открыть";
+          } else if ( document.getElementById("status").innerText == "Остановлен при открытии") {
+            document.getElementById("sbs_button").innerText="Закрыть";
+          } else if (document.getElementById("status").innerText != "Закрывается..." 
+                  && document.getElementById("status").innerText != "Открывается..." ) {
+            document.getElementById("status").innerText="Промежуточное положение";
+            document.getElementById("sbs_button").innerText="Открыть/Закрыть/Стоп";
+          }
+        }
+      }
+    } catch (status_error) {
+      document.getElementById("sbs_button").disabled=true;
+      document.getElementById("status").innerText=`Обновить статус не удалось: ${status_error.message}`;
+    }
+  }
+  async function sbs_gate() {
+    if ( document.getElementById("sbs_button").innerText == "Открыть" ) {
+      document.getElementById("status").innerText="Открывается...";
+      document.getElementById("sbs_button").innerText="Стоп";
+    } else if ( document.getElementById("sbs_button").innerText == "Закрыть" ) {
+      document.getElementById("status").innerText="Закрывается...";
+      document.getElementById("sbs_button").innerText="Стоп";
+    } else {
+      if ( document.getElementById("status").innerText == "Закрывается..." ) {
+        document.getElementById("status").innerText="Остановлен при закрытии";
+        document.getElementById("sbs_button").innerText="Открыть";
+      } else if ( document.getElementById("status").innerText == "Открывается..." ) {
+        document.getElementById("status").innerText="Остановлен при открытии";
+        document.getElementById("sbs_button").innerText="Закрыть";
+      }
+    }
+    try {
+      const sbs_response = await fetch("gate_sbs");
+      if (!sbs_response.ok) {
+        document.getElementById("sbs_button").disabled=true;
+        document.getElementById("status").innerText=`Запрос не удался: ${sbs_response.status}`;
+      } else {
+        const obj = await sbs_response.json();
+      }
+    } catch (sbs_error) {
+      document.getElementById("sbs_button").disabled=true;
+      document.getElementById("status").innerText=`Запрос не удался: ${sbs_error.message}`;
+    }
+  }
+</script></div></body></html>

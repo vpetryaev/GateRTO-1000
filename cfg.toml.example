@@ -1,0 +1,10 @@
+[GateServer]
+wifi_ssid = "Your_WiFi_SSID"
+wifi_psk = "Your_WiFi_PSK"
+
+[GateControl]
+wifi_ssid = "Your_WiFi_SSID"
+wifi_psk = "Your_WiFi_PSK"
+max_rssi = -80
+gate_open_url = "http://192.168.1.232/gate_open"
+gate_sbs_url = "http://192.168.1.232/gate_sbs"

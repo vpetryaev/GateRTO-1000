@@ -1,0 +1,15 @@
+[build]
+target = "riscv32imc-esp-espidf"
+
+[target.riscv32imc-esp-espidf]
+linker = "ldproxy"
+runner = "espflash flash --monitor" # Select this runner for espflash v3.x.x
+
+[unstable]
+build-std = ["std", "panic_abort"]
+
+[env]
+MCU="esp32c3"
+CARGO_WORKSPACE_DIR = { value = "", relative = true }
+CRATE_CC_NO_DEFAULTS = "1"
+ESP_IDF_SYS_ROOT_CRATE="GateServer"
