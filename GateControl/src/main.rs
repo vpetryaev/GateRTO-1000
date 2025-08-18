@@ -58,6 +58,7 @@ fn main() -> anyhow::Result<()> {
         unsafe { peripherals.rmt.channel0.clone_unchecked() },
     )?;
     drop(peripherals);
+    let mut rssi_was_low: bool;
 
     loop {
         // Reconnect loop, then WiFi connection lost
@@ -67,16 +68,17 @@ fn main() -> anyhow::Result<()> {
             let mut wifi = connect_wifi(app_config.wifi_ssid, app_config.wifi_psk).unwrap();
             info!("WiFi connected with rssi {}", wifi.1);
             let mut client = Client::wrap(EspHttpConnection::new(&Default::default())?);
+
             if wifi.1 < app_config.max_rssi {
-                info!("Rssi is low. Opening gate");
-                // Red
-                led.set_pixel(RGB8::new(50, 0, 0))?;
-                let _ = get_request(app_config.gate_open_url, &mut client);
-                FreeRtos::delay_ms(1000);
+                rssi_was_low = true;
+                // White
+                led.set_pixel(RGB8::new(50, 50, 50))?;
+            } else {
+                rssi_was_low = false;
+                // Green
+                led.set_pixel(RGB8::new(0, 50, 0))?;
             }
 
-            // Green
-            led.set_pixel(RGB8::new(0, 50, 0))?;
             let gate_sbs = GATE_SBS.clone();
             let mut gate_sbs = gate_sbs.lock();
             gate_sbs.set_pull(Pull::Up).unwrap();
@@ -85,6 +87,16 @@ fn main() -> anyhow::Result<()> {
             loop {
                 let rssi = wifi.0.driver_mut().get_ap_info().unwrap().signal_strength;
                 info!("RSSI: {}", rssi);
+                if rssi_was_low && rssi >= app_config.max_rssi {
+                    rssi_was_low = false;
+                    // Red
+                    led.set_pixel(RGB8::new(50, 0, 0))?;
+                    let _ = get_request(app_config.gate_open_url, &mut client);
+                    FreeRtos::delay_ms(1000);
+                    // Green
+                    led.set_pixel(RGB8::new(0, 50, 0))?;
+                }
+
                 if gate_sbs.is_low() {
                     // Blue
                     led.set_pixel(RGB8::new(0, 0, 50))?;
